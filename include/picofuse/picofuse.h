@@ -7,6 +7,7 @@
 #define PICOFUSE_H
 
 #include <fuse/fuse.h>
+#include "adc.h"
 #include "gpio.h"
 #include "led.h"
 #include "pwm.h"

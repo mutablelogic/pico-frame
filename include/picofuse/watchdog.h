@@ -5,17 +5,14 @@
  */
 #ifndef PICOFUSE_WATCHDOG_H
 #define PICOFUSE_WATCHDOG_H
-
-#include <stdbool.h>
 #include <stdint.h>
-#include <stddef.h>
 
 #ifdef DEBUG
 #define fuse_new_watchdog(self, data) \
-    ((fuse_pwm_t *)fuse_new_watchdog_ex((self), (data), __FILE__, __LINE__))
+    ((fuse_watchdog_t *)fuse_new_watchdog_ex((self), (data), __FILE__, __LINE__))
 #else
 #define fuse_new_watchdog(self, data) \
-    ((fuse_pwm_t *)fuse_new_watchdog_ex((self), (data), 0, 0))
+    ((fuse_watchdog_t *)fuse_new_watchdog_ex((self), (data), 0, 0))
 #endif
 
 /** @brief An opaque watchdog object
@@ -30,7 +27,6 @@ typedef struct
 {
     uint16_t period_ms; ///< Requested period before watchdog updates. If zero, the default period is used.
 } fuse_watchdog_config_t;
-
 
 /** @brief Create a new watchdog instance
  *

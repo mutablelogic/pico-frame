@@ -1,5 +1,6 @@
 set(NAME "picofuse")
 add_library(${NAME} STATIC
+    adc.c
     gpio.c
     led.c
     pwm.c

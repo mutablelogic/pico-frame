@@ -167,12 +167,6 @@ static void fuse_gpio_destroy(fuse_t *self, fuse_value_t *value)
     assert(ctx);
     assert(ctx->pin < fuse_gpio_count());
 
-    // TODO
-    // If the pin is set to ADC, then disable it
-    // if(fuse_adc_channel(pin) != FUSE_ADC_INVALID) {
-    //    fuse_adc_destroy(pin);
-    //}
-
     // Cancel the interrupt
     gpio_set_irq_enabled(ctx->pin, 0xFF, false);
     gpio_deinit(ctx->pin);
