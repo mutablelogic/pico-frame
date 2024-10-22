@@ -1,10 +1,10 @@
 #include <picofuse/picofuse.h>
 
-fuse_gpio_t* button_a = NULL;
-fuse_gpio_t* button_b = NULL;
-fuse_gpio_t* button_c = NULL;
+fuse_gpio_t *button_a = NULL;
+fuse_gpio_t *button_b = NULL;
+fuse_gpio_t *button_c = NULL;
 
-const char* gpio_button(fuse_gpio_t* source)
+const char *gpio_button(fuse_gpio_t *source)
 {
     if (source == button_a)
     {
@@ -29,8 +29,8 @@ void gpio_callback(fuse_t *self, fuse_event_t *evt, void *user_data)
     assert(evt);
     assert(user_data);
 
-    const char* button = gpio_button((fuse_gpio_t* )fuse_event_source(self, evt));
-    if(button == NULL)
+    const char *button = gpio_button((fuse_gpio_t *)fuse_event_source(self, evt));
+    if (button == NULL)
     {
         return;
     }
@@ -48,10 +48,16 @@ void gpio_callback(fuse_t *self, fuse_event_t *evt, void *user_data)
 
 int run(fuse_t *self)
 {
+    // Watchdog timer
+    fuse_watchdog_config_t watchdog_config = {};
+    fuse_watchdog_t *watchdog = (fuse_watchdog_t *)fuse_retain(self, fuse_new_watchdog(self, watchdog_config));
+    assert(watchdog);
+    fuse_printf(self, "WATCHDOG: %v\n", watchdog);
+
     // GPIO callbacks for A, B, C buttons
-    button_a = (fuse_gpio_t* )fuse_retain(self, fuse_new_gpio(self, 12, FUSE_GPIO_PULLUP));
-    button_b = (fuse_gpio_t* )fuse_retain(self, fuse_new_gpio(self, 13, FUSE_GPIO_PULLUP));
-    button_c = (fuse_gpio_t* )fuse_retain(self, fuse_new_gpio(self, 14, FUSE_GPIO_PULLUP));
+    button_a = (fuse_gpio_t *)fuse_retain(self, fuse_new_gpio(self, 12, FUSE_GPIO_PULLUP));
+    button_b = (fuse_gpio_t *)fuse_retain(self, fuse_new_gpio(self, 13, FUSE_GPIO_PULLUP));
+    button_c = (fuse_gpio_t *)fuse_retain(self, fuse_new_gpio(self, 14, FUSE_GPIO_PULLUP));
     assert(button_a);
     assert(button_b);
     assert(button_c);
@@ -76,12 +82,11 @@ int run(fuse_t *self)
         .reset = 21,
         .busy = 26,
         .width = 296,
-        .height = 128
-    };
+        .height = 128};
     fuse_uc8151_t *uc8151 = fuse_new_uc8151(self, uc8151_config);
     assert(uc8151);
 
-    fuse_debugf(self, "uc8151 initialised: %v\n", uc8151);
+    fuse_printf(self, "uc8151 initialised: %v\n", uc8151);
 
     return 0;
 }

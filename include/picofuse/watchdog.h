@@ -31,4 +31,13 @@ typedef struct
     uint16_t period_ms; ///< Requested period before watchdog updates. If zero, the default period is used.
 } fuse_watchdog_config_t;
 
+
+/** @brief Create a new watchdog instance
+ *
+ * @param self The fuse application
+ * @param data The watchdog configuration
+ * @return The watchdog context, or NULL if it could not be initialized
+ */
+fuse_watchdog_t *fuse_new_watchdog_ex(fuse_t *self, fuse_watchdog_config_t data, const char *file, const int line);
+
 #endif
