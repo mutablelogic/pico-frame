@@ -1,10 +1,12 @@
 #include "adc.h"
 #include "printf.h"
 #include <hardware/adc.h>
+#include <hardware/clocks.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 
+static fuse_t *fuse_instance = NULL;
 static fuse_adc_t *fuse_adc_instance = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,6 +26,10 @@ void fuse_register_value_adc(fuse_t *self)
         .str = fuse_adc_str,
     };
     fuse_register_value_type(self, FUSE_MAGIC_ADC, fuse_adc_type);
+
+    // Set the IRQ handler
+    irq_set_exclusive_handler(ADC_IRQ_FIFO, fuse_adc_callback);
+    // irq_set_priority(ADC_IRQ_FIFO, PICO_HIGHEST_IRQ_PRIORITY);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -103,6 +109,7 @@ static bool fuse_adc_init(fuse_t *self, fuse_value_t *value, const void *user_da
     adc_set_round_robin(data->channel_mask);
 
     // Set the ADC instance
+    fuse_instance = self;
     fuse_adc_instance = adc;
 
     // Retain GPIO
@@ -123,6 +130,11 @@ static void fuse_adc_destroy(fuse_t *self, fuse_value_t *value)
     assert(value);
     fuse_adc_t *adc = (fuse_adc_t *)value;
 
+    // Disable any interrupts
+    adc_run(false);
+    adc_irq_set_enabled(false);
+    irq_set_enabled(ADC_IRQ_FIFO, false);
+
     // Disable the temp sensor
     adc_set_temp_sensor_enabled(false);
 
@@ -133,6 +145,7 @@ static void fuse_adc_destroy(fuse_t *self, fuse_value_t *value)
     }
 
     // Remove instance
+    fuse_instance = NULL;
     fuse_adc_instance = NULL;
 }
 
@@ -174,6 +187,41 @@ fuse_adc_t *fuse_new_adc_ex(fuse_t *self, fuse_adc_config_t data, const char *fi
     }
 
     return (fuse_adc_t *)fuse_new_value_ex(self, FUSE_MAGIC_ADC, &data, file, line);
+}
+
+/** @brief Set free-running mode for the ADC
+ *
+ * @param self The fuse application
+ * @param adc The ADC instance
+ * @param freq The frequency for sampling, or zero to disable sampling
+ */
+void fuse_adc_enabled(fuse_t *self, fuse_adc_t *adc, uint32_t freq)
+{
+    assert(self);
+    assert(adc);
+    assert(freq <= clock_get_hz(clk_adc));
+
+    if (freq == 0)
+    {
+        adc_run(false);
+        adc_irq_set_enabled(false);
+        irq_set_enabled(ADC_IRQ_FIFO, false);
+        return;
+    }
+
+    // Set FIFO mode (no DMA)
+    adc_fifo_setup(true, false, 0, false, false);
+
+    // Default ADC clock source is the bus clock which is 48 MHz on the RP2040.
+    uint32_t clock_divider = clock_get_hz(clk_adc) / freq;
+    if (clock_divider < 1)
+    {
+        clock_divider = 1;
+    }
+    adc_set_clkdiv((float)clock_divider);
+    adc_irq_set_enabled(true);
+    irq_set_enabled(ADC_IRQ_FIFO, true);
+    adc_run(true);
 }
 
 /** @brief Read the voltage from the ADC
@@ -255,29 +303,15 @@ static inline uint8_t fuse_adc_gpio(uint8_t ch)
     return 0;
 }
 
-/*
+#include <stdio.h>
 
-uint32_t fuse_adc_get(uint8_t channel, uint32_t *mask)
+/** @brief Callback for ADC IRQ
+ */
+static void fuse_adc_callback()
 {
-    assert(channel < fuse_adc_count());
-    adc_select_input(channel);
-    if (mask != NULL)
+    if (fuse_instance && fuse_adc_instance)
     {
-        *mask = ADC_MASK;
+        uint16_t value = adc_fifo_get();
+        fuse_new_event(fuse_instance, (fuse_value_t *)fuse_adc_instance, FUSE_EVENT_ADC, (void *)value);
     }
-    return adc_read() & ADC_MASK;
 }
-
-float fuse_adc_get_voltage(uint8_t channel)
-{
-    assert(channel < fuse_adc_count());
-    uint32_t value = fuse_adc_get(channel,NULL);
-    return (float)value *  ADC_VREF / (float)ADC_MASK;
-}
-
-float fuse_adc_get_temp(uint8_t channel)
-{
-    float value = fuse_adc_get_voltage(channel);
-    
-}
-*/

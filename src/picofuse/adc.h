@@ -39,4 +39,8 @@ static bool fuse_adc_is_temp_sensor(uint8_t ch);
  */
 static uint8_t fuse_adc_gpio(uint8_t ch);
 
+/** @brief Callback for ADC IRQ
+ */
+static void fuse_adc_callback();
+
 #endif
