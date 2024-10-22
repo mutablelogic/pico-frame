@@ -176,6 +176,50 @@ fuse_adc_t *fuse_new_adc_ex(fuse_t *self, fuse_adc_config_t data, const char *fi
     return (fuse_adc_t *)fuse_new_value_ex(self, FUSE_MAGIC_ADC, &data, file, line);
 }
 
+/** @brief Read the voltage from the ADC
+ *
+ * @param self The fuse application
+ * @param adc The ADC instance
+ * @param channel The channel number
+ * @return Voltage in volts, or 0 if it could not be read (for example, if the channel is not enabled)
+ */
+float fuse_adc_voltage(fuse_t *self, fuse_adc_t *adc, uint8_t channel)
+{
+    assert(self);
+    assert(adc);
+    assert(channel < NUM_ADC_CHANNELS);
+
+    if (channel != adc->temp && !adc->gpio[channel])
+    {
+        return 0;
+    }
+    adc_select_input(channel);
+    return (float)(adc_read() & ADC_MASK) * ADC_VREF / (float)(ADC_MASK);
+}
+
+/** @brief Read the temperature from the ADC
+ *
+ * @param self The fuse application
+ * @param adc The ADC instance
+ * @return Temperature in celcius, or 0 if it could not be read (for example, if the channel is not enabled)
+ */
+float fuse_adc_temperature(fuse_t *self, fuse_adc_t *adc)
+{
+    assert(self);
+    assert(adc);
+
+    if (adc->temp == 0)
+    {
+        return 0;
+    }
+    float v = fuse_adc_voltage(self, adc, adc->temp);
+    if (v == 0)
+    {
+        return 0;
+    }
+    return 27.f - (v - 0.706f) / 0.001721f;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PRIVATE METHODS
 
@@ -234,6 +278,6 @@ float fuse_adc_get_voltage(uint8_t channel)
 float fuse_adc_get_temp(uint8_t channel)
 {
     float value = fuse_adc_get_voltage(channel);
-    return 27. - (value - 0.706f) / 0.001721f;
+    
 }
 */

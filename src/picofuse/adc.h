@@ -5,6 +5,9 @@
 #define FUSE_PRIVATE_ADC_H
 #include <picofuse/picofuse.h>
 
+#define ADC_MASK 0xFFF ///< The mask for the ADC value
+#define ADC_VREF 3.3f  ///< The reference voltage for the ADC
+
 /** @brief ADC context
  */
 struct adc_context

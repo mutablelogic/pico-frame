@@ -36,4 +36,21 @@ typedef struct
  */
 fuse_adc_t *fuse_new_adc_ex(fuse_t *self, fuse_adc_config_t data, const char *file, const int line);
 
+/** @brief Read the voltage from the ADC
+ *
+ * @param self The fuse application
+ * @param adc The ADC instance
+ * @param channel The channel number
+ * @return Voltage in volts, or 0 if it could not be read (for example, if the channel is not enabled)
+ */
+float fuse_adc_voltage(fuse_t *self, fuse_adc_t *adc, uint8_t channel);
+
+/** @brief Read the temperature from the ADC
+ *
+ * @param self The fuse application
+ * @param adc The ADC instance
+ * @return Temperature in celcius, or 0 if it could not be read (for example, if the channel is not enabled)
+ */
+float fuse_adc_temperature(fuse_t *self, fuse_adc_t* adc);
+
 #endif
