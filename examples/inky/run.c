@@ -1,5 +1,26 @@
 #include <picofuse/picofuse.h>
 
+fuse_gpio_t* button_a = NULL;
+fuse_gpio_t* button_b = NULL;
+fuse_gpio_t* button_c = NULL;
+
+const char* gpio_button(fuse_gpio_t* source)
+{
+    if (source == button_a)
+    {
+        return "A";
+    }
+    if (source == button_b)
+    {
+        return "B";
+    }
+    if (source == button_c)
+    {
+        return "C";
+    }
+    return NULL;
+}
+
 /* @brief Callback when there is a rising or falling edge on GPIO pin
  */
 void gpio_callback(fuse_t *self, fuse_event_t *evt, void *user_data)
@@ -8,16 +29,32 @@ void gpio_callback(fuse_t *self, fuse_event_t *evt, void *user_data)
     assert(evt);
     assert(user_data);
 
-    // Print the event
-    fuse_printf(self, "Event: evt=%v user_data=%p\n", evt, user_data);
+    const char* button = gpio_button((fuse_gpio_t* )fuse_event_source(self, evt));
+    if(button == NULL)
+    {
+        return;
+    }
+
+    uint8_t action = (uintptr_t)user_data;
+    if (action & FUSE_GPIO_RISING)
+    {
+        fuse_printf(self, "Button %s: Up\n", button);
+    }
+    if (action & FUSE_GPIO_FALLING)
+    {
+        fuse_printf(self, "Button %s: Down\n", button);
+    }
 }
 
 int run(fuse_t *self)
 {
     // GPIO callbacks for A, B, C buttons
-    assert(fuse_retain(self, fuse_new_gpio(self, 12, FUSE_GPIO_PULLUP)));
-    assert(fuse_retain(self, fuse_new_gpio(self, 13, FUSE_GPIO_PULLUP)));
-    assert(fuse_retain(self, fuse_new_gpio(self, 14, FUSE_GPIO_PULLUP)));
+    button_a = (fuse_gpio_t* )fuse_retain(self, fuse_new_gpio(self, 12, FUSE_GPIO_PULLUP));
+    button_b = (fuse_gpio_t* )fuse_retain(self, fuse_new_gpio(self, 13, FUSE_GPIO_PULLUP));
+    button_c = (fuse_gpio_t* )fuse_retain(self, fuse_new_gpio(self, 14, FUSE_GPIO_PULLUP));
+    assert(button_a);
+    assert(button_b);
+    assert(button_c);
 
     // Register a callback
     fuse_register_callback(self, FUSE_EVENT_GPIO, 0, gpio_callback);

@@ -160,6 +160,24 @@ void fuse_exec_event(fuse_t *self, uint8_t q, fuse_event_t *evt)
     }
 }
 
+/** @brief Return the event source
+ * 
+ * Returns the source of an event. If the event is NULL, then NULL is returned.
+ * 
+ * @param self The fuse application
+ * @param event The event
+ * @returns The source of the event
+ */
+inline fuse_value_t *fuse_event_source(fuse_t *self, fuse_event_t *event)
+{
+    if (event == NULL)
+    {
+        return NULL;
+    }
+    assert(fuse_allocator_magic(self->allocator, event) == FUSE_MAGIC_EVENT);
+    return ((struct event_context *)event)->source;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // PRIVATE METHODS
 
@@ -211,7 +229,7 @@ static size_t fuse_str_event_type(char *buf, size_t sz, size_t i, uint8_t type)
     case FUSE_EVENT_SPI_TX:
         return qstrtostr_internal(buf, sz, i, "SPI_TX");
     case FUSE_EVENT_SPI_RX:
-        return qstrtostr_internal(buf, sz, i, "SPI_RX");    
+        return qstrtostr_internal(buf, sz, i, "SPI_RX");
     case FUSE_EVENT_BME280:
         return qstrtostr_internal(buf, sz, i, "BME280");
     default:

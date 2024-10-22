@@ -9,11 +9,11 @@
 #include "value.h"
 
 // Define the event types
-#define FUSE_EVENT_NULL   0x00 ///< NULL event
-#define FUSE_EVENT_TIMER  0x01 ///< Timer event
-#define FUSE_EVENT_GPIO   0x02 ///< GPIO input event
-#define FUSE_EVENT_PWM    0x03 ///< PWM level event
-#define FUSE_EVENT_ADC    0x04 ///< ADC samples event
+#define FUSE_EVENT_NULL 0x00   ///< NULL event
+#define FUSE_EVENT_TIMER 0x01  ///< Timer event
+#define FUSE_EVENT_GPIO 0x02   ///< GPIO input event
+#define FUSE_EVENT_PWM 0x03    ///< PWM level event
+#define FUSE_EVENT_ADC 0x04    ///< ADC samples event
 #define FUSE_EVENT_SPI_TX 0x05 ///< SPI transmit event
 #define FUSE_EVENT_SPI_RX 0x06 ///< SPI receive event
 #define FUSE_EVENT_BME280 0x07 ///< BME280 measurement event
@@ -67,7 +67,7 @@ fuse_event_t *fuse_next_event(fuse_t *self, uint8_t q);
 
 /** @brief Callback for an event
  */
-typedef void (*fuse_callback_t)(fuse_t *self, fuse_event_t *evt, void *user_data);
+typedef void (*fuse_callback_t)(fuse_t *self, fuse_event_t *event, void *user_data);
 
 /** @brief Register a callback for an event
  *
@@ -89,6 +89,16 @@ bool fuse_register_callback(fuse_t *self, uint8_t type, uint8_t q, fuse_callback
  * @param q The queue to retrieve the event callbacks from (0 or 1)
  * @param evt The event to execute
  */
-void fuse_exec_event(fuse_t *self, uint8_t q, fuse_event_t *evt);
+void fuse_exec_event(fuse_t *self, uint8_t q, fuse_event_t *event);
+
+/** @brief Return the event source
+ *
+ * Returns the source of an event. If the event is NULL, then NULL is returned.
+ *
+ * @param self The fuse application
+ * @param event The event
+ * @returns The source of the event
+ */
+fuse_value_t *fuse_event_source(fuse_t *self, fuse_event_t *event);
 
 #endif /* FUSE_EVENT_H */

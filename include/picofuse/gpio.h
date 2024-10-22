@@ -23,6 +23,14 @@ typedef enum
     FUSE_GPIO_FUNC_COUNT ///< The number of GPIO functions
 } fuse_gpio_func_t;
 
+/** @brief Defines the user_data for the FUSE_EVENT_GPIO event
+ */
+typedef enum
+{
+    FUSE_GPIO_RISING = 0x08,  ///< Rising edge
+    FUSE_GPIO_FALLING = 0x04, ///< Falling edge
+} fuse_gpio_userdata_t;
+
 #ifdef DEBUG
 #define fuse_new_gpio(self, pin, func) \
     ((fuse_gpio_t *)fuse_new_gpio_ex((self), (pin), (func), __FILE__, __LINE__))
