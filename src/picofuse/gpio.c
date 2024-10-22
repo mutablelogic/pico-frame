@@ -60,6 +60,10 @@ void fuse_register_value_gpio(fuse_t *self)
 
     // Set the callback instance
     fuse_gpio_instance = self;
+
+    // Set the irq callback on this core
+    gpio_set_irq_callback(&fuse_gpio_callback);
+    irq_set_enabled(IO_IRQ_BANK0, true);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -170,7 +174,7 @@ static void fuse_gpio_destroy(fuse_t *self, fuse_value_t *value)
     //}
 
     // Cancel the interrupt
-    gpio_set_irq_enabled_with_callback(ctx->pin, 0xFF, false, NULL);
+    gpio_set_irq_enabled(ctx->pin, 0xFF, false);
     gpio_deinit(ctx->pin);
 }
 
@@ -187,10 +191,7 @@ static void fuse_gpio_setfunc(uint8_t pin, fuse_gpio_func_t func)
     gpio_init(pin);
 
     // Cancel the interrupt
-    if (func != FUSE_GPIO_IN)
-    {
-        gpio_set_irq_enabled_with_callback(pin, 0xFF, false, NULL);
-    }
+    gpio_set_irq_enabled(pin, 0xFF, false);
 
     // Set function based on function
     switch (func)
@@ -198,21 +199,22 @@ static void fuse_gpio_setfunc(uint8_t pin, fuse_gpio_func_t func)
     case FUSE_GPIO_IN:
         gpio_set_dir(pin, GPIO_IN);
         gpio_set_pulls(pin, false, false);
-        gpio_set_irq_enabled_with_callback(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &fuse_gpio_callback);
+        gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
         break;
     case FUSE_GPIO_PULLDN:
         gpio_set_dir(pin, GPIO_IN);
         gpio_set_pulls(pin, false, true);
+        gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
         break;
     case FUSE_GPIO_PULLUP:
         gpio_set_dir(pin, GPIO_IN);
         gpio_set_pulls(pin, true, false);
+        gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
         break;
     case FUSE_GPIO_OUT:
         gpio_set_dir(pin, GPIO_OUT);
         break;
     case FUSE_GPIO_PWM:
-        printf("Setting GPIO %d to PWM\n", pin);
         gpio_set_function(pin, GPIO_FUNC_PWM);
         break;
     case FUSE_GPIO_SPI:
