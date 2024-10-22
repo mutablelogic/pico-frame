@@ -99,6 +99,9 @@ static bool fuse_adc_init(fuse_t *self, fuse_value_t *value, const void *user_da
         }
     }
 
+    // Set round-robin mode
+    adc_set_round_robin(data->channel_mask);
+
     // Set the ADC instance
     fuse_adc_instance = adc;
 
@@ -207,7 +210,6 @@ static inline uint8_t fuse_adc_gpio(uint8_t ch)
     }
     return 0;
 }
-
 
 /*
 
